@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout /t 3 /nobreak)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

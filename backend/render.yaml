@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ai-dialer-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT run:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_MODEL_NAME
+        value: microsoft/DialoGPT-medium
+      - key: AI_MODEL_TYPE
+        value: huggingface
+      - key: DEBUG
+        value: False

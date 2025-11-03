@@ -1,0 +1,29 @@
+{
+  "name": "ai-dialer",
+  "version": "1.0.0",
+  "description": "A minimalist, browser-based AI dialer with voice and text interaction",
+  "scripts": {
+    "install:all": "npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python run.py",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "echo Please run 'npm run dev:frontend' and 'npm run dev:backend' in separate terminals"
+  },
+  "keywords": [
+    "ai",
+    "dialer",
+    "voice",
+    "chat",
+    "huggingface",
+    "react",
+    "flask"
+  ],
+  "author": "AI Dialer Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ai-dialer.git"
+  }
+}
