@@ -49,3 +49,22 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+
+
+# To see what's changed
+ git status
+
+# To see the difference
+git diff
+
+# To undo all changes and go back to this checkpoint
+git reset --hard 3c9d60a
+
+# Or simply
+git reset --hard HEAD
+To Make Future Commits:
+# After making changes
+git add .
+git commit -m "Your commit message describing the changes" //
+

@@ -6,9 +6,9 @@ function RequestInput({ onSubmit, isLoading, onBack }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (requestText.trim()) {
-      onSubmit(requestText)
-    }
+    // If no text entered, use a general default request
+    const finalRequest = requestText.trim() || 'General assistance'
+    onSubmit(finalRequest)
   }
 
   const quickOptions = [
@@ -63,7 +63,7 @@ function RequestInput({ onSubmit, isLoading, onBack }) {
             How can we help?
           </h1>
           <p className="text-gray-400 text-lg">
-            Describe your request and we'll connect you instantly
+            Describe your request or just click Start Call for general assistance
           </p>
         </div>
 
@@ -73,7 +73,7 @@ function RequestInput({ onSubmit, isLoading, onBack }) {
             <textarea
               value={requestText}
               onChange={(e) => setRequestText(e.target.value)}
-              placeholder="E.g., I need help with my account billing..."
+              placeholder="E.g., I need help with my account billing... (Optional - you can start call without entering text)"
               className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 focus:border-cyan-400/50 focus:bg-white/10 text-white px-6 py-5 rounded-3xl focus:outline-none focus:ring-2 focus:ring-cyan-500/30 resize-none h-40 placeholder-gray-500 transition-all duration-300 font-light shadow-2xl"
               style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 2px 10px rgba(255, 255, 255, 0.05)' }}
               disabled={isLoading}
@@ -87,12 +87,12 @@ function RequestInput({ onSubmit, isLoading, onBack }) {
 
           <button
             type="submit"
-            disabled={!requestText.trim() || isLoading}
+            disabled={isLoading}
             className="group w-full relative bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:via-blue-500 hover:to-purple-500 disabled:from-gray-800 disabled:to-gray-800 disabled:opacity-30 text-white font-bold py-6 px-8 rounded-2xl transition-all duration-300 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg shadow-2xl disabled:shadow-none overflow-hidden"
             style={{
-              boxShadow: !isLoading && requestText.trim() ? '0 25px 60px -10px rgba(59, 130, 246, 0.6)' : 'none',
+              boxShadow: !isLoading ? '0 25px 60px -10px rgba(59, 130, 246, 0.6)' : 'none',
               backgroundSize: '200% 200%',
-              animation: !isLoading && requestText.trim() ? 'gradient-x 3s ease infinite' : 'none'
+              animation: !isLoading ? 'gradient-x 3s ease infinite' : 'none'
             }}
           >
             {isLoading ? (
