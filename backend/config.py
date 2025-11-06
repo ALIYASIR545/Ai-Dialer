@@ -42,6 +42,15 @@ class Config:
     ORGANIZATION_TYPE = os.getenv('ORGANIZATION_TYPE', 'software')  # hospital, school, software, jail, law_firm, restaurant
     ORGANIZATION_NAME = os.getenv('ORGANIZATION_NAME', None)  # Custom organization name
 
+    # Twilio Configuration
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', None)
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', None)
+    TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', None)
+    TWILIO_TWIML_APP_SID = os.getenv('TWILIO_TWIML_APP_SID', None)
+
+    # Public URL (for tunneling services like ngrok or localtunnel)
+    PUBLIC_URL = os.getenv('PUBLIC_URL', None)  # e.g., https://lemon-beds-shout.loca.lt
+
     @staticmethod
     def validate():
         """Validate required configuration"""

@@ -1,15 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 function Waveform({ isActive, audioProcessor }) {
   const canvasRef = useRef(null)
   const animationRef = useRef(null)
-  const [bars, setBars] = useState(Array(32).fill(0.1))
+  const barsRef = useRef(Array(32).fill(0.1))
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ctx = canvas.getContext('2d')
+
     const draw = () => {
       const width = canvas.width
       const height = canvas.height
@@ -19,21 +20,23 @@ function Waveform({ isActive, audioProcessor }) {
 
       if (isActive && audioProcessor) {
         // Get real audio data
-        const newBars = audioProcessor.getNormalizedBars(32)
-        setBars(newBars)
+        try {
+          barsRef.current = audioProcessor.getNormalizedBars(32)
+        } catch (e) {
+          // If error, keep previous bars
+        }
       } else {
         // Simulate idle animation
-        setBars(prev => prev.map((bar, i) => {
-          const random = Math.random() * 0.05 + 0.05
+        barsRef.current = barsRef.current.map((bar) => {
           return Math.max(0.05, Math.min(0.15, bar + (Math.random() - 0.5) * 0.02))
-        }))
+        })
       }
 
       // Draw bars
-      const barWidth = width / bars.length
+      const barWidth = width / barsRef.current.length
       const gap = 2
 
-      bars.forEach((value, i) => {
+      barsRef.current.forEach((value, i) => {
         const barHeight = Math.max(4, value * height * 0.8)
         const x = i * barWidth
         const y = (height - barHeight) / 2
@@ -57,7 +60,7 @@ function Waveform({ isActive, audioProcessor }) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [isActive, audioProcessor, bars])
+  }, [isActive, audioProcessor])
 
   return (
     <div className="flex items-center justify-center w-full h-32 bg-slate-800 rounded-lg overflow-hidden">

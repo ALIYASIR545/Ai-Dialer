@@ -4,7 +4,7 @@ Abstraction layer for different AI models (HuggingFace, OpenAI, etc.)
 """
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 from config import Config
 
 
@@ -28,6 +28,8 @@ class HuggingFaceConnector(ModelConnector):
         self.tokenizer = None
         self.model = None
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # Determine if this is a seq2seq model (like BlenderBot) or causal (like GPT)
+        self.is_seq2seq = 'blenderbot' in self.model_name.lower() or 'bart' in self.model_name.lower() or 't5' in self.model_name.lower()
         self.load_model()
 
     def load_model(self):
@@ -41,15 +43,24 @@ class HuggingFaceConnector(ModelConnector):
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_name,
                 token=token_param,
-                padding_side='left'
+                padding_side='left' if not self.is_seq2seq else 'right'
             )
 
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                token=token_param,
-                torch_dtype=torch.float16 if self.device == 'cuda' else torch.float32,
-                low_cpu_mem_usage=True
-            ).to(self.device)
+            # Use Seq2Seq model for BlenderBot-style models, CausalLM for GPT-style
+            if self.is_seq2seq:
+                self.model = AutoModelForSeq2SeqLM.from_pretrained(
+                    self.model_name,
+                    token=token_param,
+                    torch_dtype=torch.float16 if self.device == 'cuda' else torch.float32,
+                    low_cpu_mem_usage=True
+                ).to(self.device)
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_name,
+                    token=token_param,
+                    torch_dtype=torch.float16 if self.device == 'cuda' else torch.float32,
+                    low_cpu_mem_usage=True
+                ).to(self.device)
 
             # Set pad token if not set
             if self.tokenizer.pad_token is None:
@@ -75,34 +86,57 @@ class HuggingFaceConnector(ModelConnector):
         """
         try:
             # Build conversation context
-            context = self._build_context(prompt, conversation_history)
+            system_message = kwargs.get('system_message', None)
+            context = self._build_context(prompt, conversation_history, system_message)
 
-            # Tokenize
-            inputs = self.tokenizer.encode(
-                context + self.tokenizer.eos_token,
-                return_tensors='pt',
-                truncation=True,
-                max_length=1000
-            ).to(self.device)
+            if self.is_seq2seq:
+                # For Seq2Seq models (BlenderBot), use encoder-decoder architecture
+                inputs = self.tokenizer(
+                    context,
+                    return_tensors='pt',
+                    truncation=True,
+                    max_length=512
+                ).to(self.device)
 
-            # Generate
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    inputs,
-                    max_length=inputs.shape[1] + Config.MAX_LENGTH,
-                    temperature=kwargs.get('temperature', Config.TEMPERATURE),
-                    top_p=kwargs.get('top_p', Config.TOP_P),
-                    do_sample=True,
-                    pad_token_id=self.tokenizer.pad_token_id,
-                    eos_token_id=self.tokenizer.eos_token_id,
-                    num_return_sequences=1
-                )
+                with torch.no_grad():
+                    outputs = self.model.generate(
+                        **inputs,
+                        max_length=Config.MAX_LENGTH,
+                        temperature=kwargs.get('temperature', Config.TEMPERATURE),
+                        top_p=kwargs.get('top_p', Config.TOP_P),
+                        do_sample=True,
+                        num_return_sequences=1
+                    )
 
-            # Decode response
-            response = self.tokenizer.decode(
-                outputs[0][inputs.shape[1]:],
-                skip_special_tokens=True
-            ).strip()
+                response = self.tokenizer.decode(
+                    outputs[0],
+                    skip_special_tokens=True
+                ).strip()
+            else:
+                # For Causal LM models (GPT-style), use autoregressive generation
+                inputs = self.tokenizer.encode(
+                    context + self.tokenizer.eos_token,
+                    return_tensors='pt',
+                    truncation=True,
+                    max_length=1000
+                ).to(self.device)
+
+                with torch.no_grad():
+                    outputs = self.model.generate(
+                        inputs,
+                        max_length=inputs.shape[1] + Config.MAX_LENGTH,
+                        temperature=kwargs.get('temperature', Config.TEMPERATURE),
+                        top_p=kwargs.get('top_p', Config.TOP_P),
+                        do_sample=True,
+                        pad_token_id=self.tokenizer.pad_token_id,
+                        eos_token_id=self.tokenizer.eos_token_id,
+                        num_return_sequences=1
+                    )
+
+                response = self.tokenizer.decode(
+                    outputs[0][inputs.shape[1]:],
+                    skip_special_tokens=True
+                ).strip()
 
             # Fallback if empty
             if not response:
@@ -114,9 +148,13 @@ class HuggingFaceConnector(ModelConnector):
             print(f"Error generating response: {e}")
             return "I apologize, but I encountered an error processing your request."
 
-    def _build_context(self, prompt, conversation_history):
+    def _build_context(self, prompt, conversation_history, system_message=None):
         """Build conversation context from history"""
         context = ""
+
+        # Add system instruction as first user message (DialoGPT doesn't have system role)
+        if system_message and not conversation_history:
+            context += f"System: {system_message}{self.tokenizer.eos_token}"
 
         if conversation_history:
             # Get last N messages
@@ -124,11 +162,11 @@ class HuggingFaceConnector(ModelConnector):
 
             for msg in recent_history:
                 if msg['role'] == 'user':
-                    context += f"{msg['content']}{self.tokenizer.eos_token}"
+                    context += f"User: {msg['content']}{self.tokenizer.eos_token}"
                 elif msg['role'] == 'assistant':
-                    context += f"{msg['content']}{self.tokenizer.eos_token}"
+                    context += f"Assistant: {msg['content']}{self.tokenizer.eos_token}"
 
-        context += prompt
+        context += f"User: {prompt}{self.tokenizer.eos_token}Assistant:"
         return context
 
 

@@ -8,7 +8,7 @@ app = create_app()
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("AI Dialer Backend Server")
+    print("AI Dialer Backend Server")                               
     print("=" * 60)
     print("Server starting on http://localhost:5000")
     print("API endpoints available at http://localhost:5000/api")

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Phone, Delete, ArrowLeft, PhoneCall, Sparkles } from 'lucide-react'
+import { Phone, Delete, ArrowLeft, PhoneCall, Sparkles, Settings } from 'lucide-react'
 
-function DialPad({ onCall, onBack }) {
+function DialPad({ onCall, onBack, onSettings }) {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [pressedButton, setPressedButton] = useState(null)
 
@@ -86,6 +86,24 @@ function DialPad({ onCall, onBack }) {
         >
           <ArrowLeft size={18} className="text-violet-200 group-hover:text-white transition-colors relative z-10 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm text-violet-200 group-hover:text-white transition-colors font-semibold relative z-10">Back</span>
+
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-600/0 via-purple-600/0 to-fuchsia-600/0 group-hover:from-violet-600/30 group-hover:via-purple-600/30 group-hover:to-fuchsia-600/30 transition-all duration-500"></div>
+
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+        </button>
+      </div>
+
+      {/* Settings Button - animated */}
+      <div className="absolute top-6 right-6 z-20">
+        <button
+          onClick={onSettings}
+          className="group relative flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-xl border-2 border-white/20 hover:border-violet-400/60 hover:bg-white/20 rounded-xl transition-all duration-300 shadow-2xl overflow-hidden"
+          style={{ boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3)' }}
+        >
+          <Settings size={18} className="text-violet-200 group-hover:text-white transition-colors relative z-10 group-hover:rotate-90 transition-transform" />
+          <span className="text-sm text-violet-200 group-hover:text-white transition-colors font-semibold relative z-10">Settings</span>
 
           {/* Animated background */}
           <div className="absolute inset-0 bg-gradient-to-r from-violet-600/0 via-purple-600/0 to-fuchsia-600/0 group-hover:from-violet-600/30 group-hover:via-purple-600/30 group-hover:to-fuchsia-600/30 transition-all duration-500"></div>
@@ -290,7 +308,7 @@ function DialPad({ onCall, onBack }) {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes grid-move {
           0% { transform: translateY(0); }
           100% { transform: translateY(50px); }

@@ -21,11 +21,13 @@ def create_app():
     from app.routes.config import config_bp
     from app.routes.transcript import transcript_bp
     from app.routes.plugins import plugins_bp
+    from app.routes.voice import voice_bp
 
     app.register_blueprint(chat_bp, url_prefix='/api')
     app.register_blueprint(config_bp, url_prefix='/api/config')
     app.register_blueprint(transcript_bp, url_prefix='/api/transcript')
     app.register_blueprint(plugins_bp, url_prefix='/api/plugins')
+    app.register_blueprint(voice_bp, url_prefix='/api/voice')
 
     # Health check
     @app.route('/api/health')

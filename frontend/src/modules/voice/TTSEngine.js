@@ -33,10 +33,8 @@ class TTSEngine {
         return
       }
 
-      // Cancel current speech if any
-      if (options.interrupt) {
-        this.stop()
-      }
+      // Always cancel current speech before starting new one
+      this.stop()
 
       const utterance = new SpeechSynthesisUtterance(text)
 
@@ -59,9 +57,17 @@ class TTSEngine {
 
       utterance.onerror = (event) => {
         this.isSpeaking = false
-        console.error('Speech synthesis error:', event)
+        // Don't log 'interrupted' errors - they're expected when we cancel speech
+        if (event.error !== 'interrupted') {
+          console.error('Speech synthesis error:', event)
+        }
         if (options.onError) options.onError(event)
-        reject(event)
+        // Resolve instead of reject for 'interrupted' errors
+        if (event.error === 'interrupted') {
+          resolve()
+        } else {
+          reject(event)
+        }
       }
 
       this.currentUtterance = utterance

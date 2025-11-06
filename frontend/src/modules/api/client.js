@@ -26,6 +26,7 @@ client.interceptors.request.use(
     return config
   },
   (error) => {
+    console.error('Request Error:', error)
     return Promise.reject(error)
   }
 )
@@ -111,6 +112,21 @@ export const api = {
   // Health check
   healthCheck: async () => {
     const response = await client.get('/health')
+    return response.data
+  },
+
+  // Make real phone call via Twilio
+  makePhoneCall: async (toNumber, requestText) => {
+    const response = await client.post('/voice/make-call', {
+      to: toNumber,
+      request_text: requestText
+    })
+    return response.data
+  },
+
+  // Get call status
+  getCallStatus: async (callSid) => {
+    const response = await client.get(`/voice/call-status/${callSid}`)
     return response.data
   }
 }
